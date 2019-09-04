@@ -16,6 +16,7 @@ scikit-learn = "*"
 seaborn = "*"
 jupyter = "*"
 squarify = "*"
+xgboost = "*"
 
 [requires]
 python_version = "3.7"
