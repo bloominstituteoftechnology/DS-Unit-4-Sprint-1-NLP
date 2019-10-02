@@ -49,7 +49,7 @@ more-itertools==7.1.0
 msgpack==0.6.1
 msgpack-numpy==0.4.3.2
 murmurhash==1.0.2
-nltk==3.4.1
+nltk==3.4.5
 numexpr==2.6.9
 numpy==1.15.4
 packaging==19.0
@@ -83,7 +83,7 @@ scipy==1.1.0
 seaborn==0.9.0
 six==1.12.0
 smart-open==1.8.4
-spacy==2.0.16
+spacy==2.1.8
 squarify==0.4.3
 statsmodels==0.9.0
 tensorboard==1.14.0
