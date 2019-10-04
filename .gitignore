@@ -102,3 +102,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+module4-topic-modeling/data/Datafiniti_Amazon_Consumer_Reviews/Amazon_Consumer_Reviews.csv
