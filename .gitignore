@@ -1,4 +1,5 @@
 .vscode/
+*.csv
 *.secret
 
 # Byte-compiled / optimized / DLL files
