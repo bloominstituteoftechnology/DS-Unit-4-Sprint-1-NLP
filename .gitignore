@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 .vscode/settings.json
 module1-text-data/data/Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv
+module4-topic-modeling/.vscode/settings.json
