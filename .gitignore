@@ -1,6 +1,7 @@
 .vscode/
 *.csv
 *.secret
+.sprint-challenge*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
