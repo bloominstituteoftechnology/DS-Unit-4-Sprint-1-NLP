@@ -17,6 +17,7 @@ seaborn = "==0.9.0"
 spacy = "==2.1.8"
 squarify = "==0.4.3"
 pyLDAvis = "==2.1.2"
+bs4 = "*"
 
 [requires]
 python_version = "3.7"
