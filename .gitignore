@@ -103,3 +103,5 @@ venv.bak/
 # mypy
 .mypy_cache/
 module1-text-data/data/Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv
+sprint-challenge
+module3-document-classification/data/
