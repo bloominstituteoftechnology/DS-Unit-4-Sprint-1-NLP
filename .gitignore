@@ -108,3 +108,6 @@ venv.bak/
 
 # Chrome Driver for Selenium
 chromedriver
+
+# Data
+*/data
