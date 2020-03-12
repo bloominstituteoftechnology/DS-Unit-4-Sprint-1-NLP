@@ -9,3 +9,5 @@ nltk
 pandas
 scipy
 beautifulsoup4
+basilica==0.2.8
+python-dotenv==0.12.0
