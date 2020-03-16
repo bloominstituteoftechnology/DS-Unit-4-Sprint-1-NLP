@@ -1,8 +1,9 @@
-Clean up dates in the review
+Clean up dates in the review - Completed
 
 Extra Words in the star_rating column
 
 Analyze the corpus of text using text visualizations of token frequency. Try cleaning the data as much as possible. Try the following techniques: 
+
 - Lemmatization
 - Custom stopword removal
 
