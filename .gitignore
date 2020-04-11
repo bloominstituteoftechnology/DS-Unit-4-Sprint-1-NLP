@@ -102,3 +102,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+module3-document-classification/data/train.csv
+module3-document-classification/data/
