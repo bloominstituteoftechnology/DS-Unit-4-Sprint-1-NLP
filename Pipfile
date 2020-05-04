@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gensim = "==3.8.1"
+pyLDAvis = "==2.1.2"
+spacy = "==2.2.3"
+scikit-learn = "==0.22.2"
+seaborn = "==0.9.0"
+squarify = "==0.4.3"
+ipykernel = "*"
+nltk = "*"
+pandas = "*"
+scipy = "*"
+beautifulsoup4 = "*"
+bs4 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
