@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*/*.csv
 # C extensions
 *.so
 
@@ -102,3 +103,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+.vscode
+module1-text-data/data/Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv
