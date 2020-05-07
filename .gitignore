@@ -6,7 +6,7 @@ __pycache__/
 */*.csv
 # C extensions
 *.so
-
+module4-topic-modeling/data/Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv
 # Distribution / packaging
 .Python
 build/
