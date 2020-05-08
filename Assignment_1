@@ -1,0 +1,1247 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<img align=\"left\" src=\"https://lever-client-logos.s3.amazonaws.com/864372b1-534c-480e-acd5-9711f850815c-1524247202159.png\" width=200>\n",
+    "<br></br>\n",
+    "<br></br>\n",
+    "\n",
+    "# Natural Language Processing (NLP)\n",
+    "## *Data Science Unit 4 Sprint 1 Assignment 1*\n",
+    "\n",
+    "Your goal in this assignment: find the attributes of the best & worst coffee shops in the dataset. The text is fairly raw: dates in the review, extra words in the `star_rating` column, etc. You'll probably want to clean that stuff up for a better analysis. \n",
+    "\n",
+    "Analyze the corpus of text using text visualizations of token frequency. Try cleaning the data as much as possible. Try the following techniques: \n",
+    "- Lemmatization\n",
+    "- Custom stopword removal\n",
+    "\n",
+    "Keep in mind the attributes of good tokens. Once you have a solid baseline, layer in the star rating in your visualization(s). Key part of this assignment - produce a write-up of the attributes of the best and worst coffee shops. Based on your analysis, what makes the best the best and the worst the worst. Use graphs and numbesr from your analysis to support your conclusions. There should be plenty of markdown cells! :coffee:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Import Required Libariries\n",
+    "import pandas as pd\n",
+    "from collections import Counter\n",
+    "\n",
+    "# Plotting\n",
+    "import squarify\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "\n",
+    "# NLP Libraries\n",
+    "import re\n",
+    "from nltk.stem import PorterStemmer\n",
+    "import spacy\n",
+    "from spacy.tokenizer import Tokenizer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/jpeg": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2MBERISGBUYLxoaL2NCOEJjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY//AABEIAWgB4AMBIgACEQEDEQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAAAQQCAwUGB//EAEMQAAICAgAEBAQEAwYDBQkAAAECAAMEEQUSITEGE0FRIjJhcRQjgZFCobEVM1JiwdEWY3IHJHOC8BclNDVDU6Lh8f/EABkBAQADAQEAAAAAAAAAAAAAAAABAgMEBf/EACERAQEAAgMBAQADAQEAAAAAAAABAhEDITESQRMiUWEy/9oADAMBAAIRAxEAPwD5/ERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQERM0qez5RvX1gYROtgeGuL8Sqa3DxPNRTonzEHX9TMeIeHeK8MRHzcTylc6B8xW/oZG4nTlxM3qsr1zrrfaYakoIjUagIjUnRgREnRjRgREnRjUCIk6kagIjUagIjUQEREBERAREQJiIkhERAREkDcBqRLC1arLkdppCE9hI2nTGJtalghblI13mqN7QREQEREkIiICIiQEREBERAREQEREBERAREQEREBERASxiNq0L79JXkg6O4TLp9U8B9OGXDfXzNn9pj4/I/syga72f6Ty3hrxWvCBYmRSzo+uqEb6fSZeJfFicWWtMah0Cb62H/QTLV1pffe3m8o/EB7TRJO26nqYA6zSKVEATPl+kzVNyUNfKZIQzetR32m0Ve4gU+SOSXGqHLuanX2hKuVmM2P2mswggDcSV7wHKfaRNpUiaj3gJERAREQEQZEBERAmIiSEREBuZ19TMANnpN5pNeiSDv29JCYu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\n",
+      "text/html": [
+       "\n",
+       "        <iframe\n",
+       "            width=\"400\"\n",
+       "            height=\"300\"\n",
+       "            src=\"https://www.youtube.com/embed/Jml7NVYm8cs\"\n",
+       "            frameborder=\"0\"\n",
+       "            allowfullscreen\n",
+       "        ></iframe>\n",
+       "        "
+      ],
+      "text/plain": [
+       "<IPython.lib.display.YouTubeVideo at 0x11f4d28d0>"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from IPython.display import YouTubeVideo\n",
+    "\n",
+    "YouTubeVideo('Jml7NVYm8cs')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'/Users/rubyclaguna/DS-Unit-4-Sprint-1-NLP/module1-text-data'"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%pwd"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>coffee_shop_name</th>\n",
+       "      <th>full_review_text</th>\n",
+       "      <th>star_rating</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/25/2016 1 check-in Love love loved the atm...</td>\n",
+       "      <td>5.0 star rating</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>12/2/2016 Listed in Date Night: Austin, Ambia...</td>\n",
+       "      <td>4.0 star rating</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/30/2016 1 check-in Listed in Brunch Spots ...</td>\n",
+       "      <td>4.0 star rating</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/25/2016 Very cool decor! Good drinks Nice ...</td>\n",
+       "      <td>2.0 star rating</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>12/3/2016 1 check-in They are located within ...</td>\n",
+       "      <td>4.0 star rating</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                  coffee_shop_name  \\\n",
+       "0  The Factory - Cafe With a Soul    \n",
+       "1  The Factory - Cafe With a Soul    \n",
+       "2  The Factory - Cafe With a Soul    \n",
+       "3  The Factory - Cafe With a Soul    \n",
+       "4  The Factory - Cafe With a Soul    \n",
+       "\n",
+       "                                    full_review_text        star_rating  \n",
+       "0   11/25/2016 1 check-in Love love loved the atm...   5.0 star rating   \n",
+       "1   12/2/2016 Listed in Date Night: Austin, Ambia...   4.0 star rating   \n",
+       "2   11/30/2016 1 check-in Listed in Brunch Spots ...   4.0 star rating   \n",
+       "3   11/25/2016 Very cool decor! Good drinks Nice ...   2.0 star rating   \n",
+       "4   12/3/2016 1 check-in They are located within ...   4.0 star rating   "
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "url = \"https://raw.githubusercontent.com/LambdaSchool/DS-Unit-4-Sprint-1-NLP/master/module1-text-data/data/yelp_coffeeshop_review_data.csv\"\n",
+    "\n",
+    "df = pd.read_csv(url)\n",
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# remove \"star rating\" str from column star_rating\n",
+    "df['star_rating'] = df['star_rating'].str.replace('star rating', '')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>coffee_shop_name</th>\n",
+       "      <th>full_review_text</th>\n",
+       "      <th>star_rating</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/25/2016 1 check-in Love love loved the atm...</td>\n",
+       "      <td>5.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>12/2/2016 Listed in Date Night: Austin, Ambia...</td>\n",
+       "      <td>4.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/30/2016 1 check-in Listed in Brunch Spots ...</td>\n",
+       "      <td>4.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/25/2016 Very cool decor! Good drinks Nice ...</td>\n",
+       "      <td>2.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>12/3/2016 1 check-in They are located within ...</td>\n",
+       "      <td>4.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                  coffee_shop_name  \\\n",
+       "0  The Factory - Cafe With a Soul    \n",
+       "1  The Factory - Cafe With a Soul    \n",
+       "2  The Factory - Cafe With a Soul    \n",
+       "3  The Factory - Cafe With a Soul    \n",
+       "4  The Factory - Cafe With a Soul    \n",
+       "\n",
+       "                                    full_review_text star_rating  \n",
+       "0   11/25/2016 1 check-in Love love loved the atm...       5.0    \n",
+       "1   12/2/2016 Listed in Date Night: Austin, Ambia...       4.0    \n",
+       "2   11/30/2016 1 check-in Listed in Brunch Spots ...       4.0    \n",
+       "3   11/25/2016 Very cool decor! Good drinks Nice ...       2.0    \n",
+       "4   12/3/2016 1 check-in They are located within ...       4.0    "
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       " 5.0      3780\n",
+       " 4.0      2360\n",
+       " 3.0       738\n",
+       " 2.0       460\n",
+       " 1.0       278\n",
+       "Name: star_rating, dtype: int64"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df['star_rating'].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "coffee_shop_name    object\n",
+       "full_review_text    object\n",
+       "star_rating         object\n",
+       "dtype: object"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# convert star_rating column to float \n",
+    "df['star_rating'] = df['star_rating'].astype(float)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "coffee_shop_name     object\n",
+       "full_review_text     object\n",
+       "star_rating         float64\n",
+       "dtype: object"
+      ]
+     },
+     "execution_count": 24,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "nlp = spacy.load(\"en_core_web_lg\")\n",
+    "tokenizer = Tokenizer(nlp.vocab)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>coffee_shop_name</th>\n",
+       "      <th>full_review_text</th>\n",
+       "      <th>star_rating</th>\n",
+       "      <th>tokens</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/25/2016 1 check-in Love love loved the atm...</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>[ , 11/25/2016, 1, check-in, Love, love, loved...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>12/2/2016 Listed in Date Night: Austin, Ambia...</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>[ , 12/2/2016, Listed, in, Date, Night:, Austi...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/30/2016 1 check-in Listed in Brunch Spots ...</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>[ , 11/30/2016, 1, check-in, Listed, in, Brunc...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>11/25/2016 Very cool decor! Good drinks Nice ...</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>[ , 11/25/2016, Very, cool, decor!, Good, drin...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>The Factory - Cafe With a Soul</td>\n",
+       "      <td>12/3/2016 1 check-in They are located within ...</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>[ , 12/3/2016, 1, check-in, They, are, located...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                  coffee_shop_name  \\\n",
+       "0  The Factory - Cafe With a Soul    \n",
+       "1  The Factory - Cafe With a Soul    \n",
+       "2  The Factory - Cafe With a Soul    \n",
+       "3  The Factory - Cafe With a Soul    \n",
+       "4  The Factory - Cafe With a Soul    \n",
+       "\n",
+       "                                    full_review_text  star_rating  \\\n",
+       "0   11/25/2016 1 check-in Love love loved the atm...          5.0   \n",
+       "1   12/2/2016 Listed in Date Night: Austin, Ambia...          4.0   \n",
+       "2   11/30/2016 1 check-in Listed in Brunch Spots ...          4.0   \n",
+       "3   11/25/2016 Very cool decor! Good drinks Nice ...          2.0   \n",
+       "4   12/3/2016 1 check-in They are located within ...          4.0   \n",
+       "\n",
+       "                                              tokens  \n",
+       "0  [ , 11/25/2016, 1, check-in, Love, love, loved...  \n",
+       "1  [ , 12/2/2016, Listed, in, Date, Night:, Austi...  \n",
+       "2  [ , 11/30/2016, 1, check-in, Listed, in, Brunc...  \n",
+       "3  [ , 11/25/2016, Very, cool, decor!, Good, drin...  \n",
+       "4  [ , 12/3/2016, 1, check-in, They, are, located...  "
+      ]
+     },
+     "execution_count": 29,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# tokenize full_review_text, add column\n",
+    "tokenizer = Tokenizer(nlp.vocab)\n",
+    "\n",
+    "tokens = []\n",
+    "\n",
+    "for doc in tokenizer.pipe(shops['full_review_text']):\n",
+    "    doc_tokens = [token.text for token in doc]\n",
+    "    tokens.append(doc_tokens)\n",
+    "\n",
+    "df['tokens'] = tokens\n",
+    "\n",
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       " 11/17/2016 1 check-in Listed in 2016 - The Third Time is a Charm! The Factory has A+ decor and a very innovative interactionless (tablet) ordering system. This allows you to look up what to get without feeling pressured by a barista staring at you waiting for you to order. The eclectic selection of tables, couches, and swings (?!) inside with a small kiddy corner appeal to many different types of tastes. This is seriously a cool place to hang out.  However, when it comes to the coffee and food, it's rather not cheap. The waffles range from $4-$8, and coffee is between $3.50 and $5. The quality of the coffee is not yet up to par with other coffee mainstays in Austin, so I would probably not choose to come here just for coffee. However, it is a CUTE date place and I know that M and I will probably come back to chat, people-watch, or read books.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   0.000525\n",
+       " 12/2/2016 Okay, so after visiting my friends in LA and trying a mint mojito iced coffee, I had to find one in Austin that's comparable. It was getting very difficult to find one to begin with, let alone a good one. I saw the mint coffee on the factory's website and had to try it. Unfortunately I was shell-shocked at the price tag ($7 if I remember correctly??)  I figured it would be a large drink and particularly fabulous and hopefully large to make up for the over the top price (this is $3 more than philz)   Was it particularly fabulous? No. It was good, it wasn't as good as philz. Was it bigger?? No. It was about 4 ounces of  coffee, tops. Will I be back? Absolutely not, especially considering I can get a 20 oz mint mojito coffee from tea haus for $3 less that tastes just as good.  This place is also self service (for ordering and pick up), why that would lead to inflated prices and not a price decrease is far beyond my understanding. I don't recommend it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             0.000525\n",
+       " 10/28/2016 AMAZING atmosphere! I walked around for 5 minutes looking at everything before even ordering.  Most unique take on chicken and waffles I've ever had. Hands down best night time hangout in North Austin. P.S.... their Matcha Latte is to die for!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           0.000525\n",
+       " 10/7/2016 1 check-in Came in on the first day of opening, hours currently 6am-2pm. At some point they'll stay open till 12 midnight. I think this might be the most beautiful cafe in Austin, the interior is charming, snazzy, cozy. There's even a pair of swings to sit on while you enjoy your coffee and play a game of chess. I ordered the Marymint Monroe, basically a mint mojito. It's been a while since I've been to Philz coffee so it's hard to compare, but I think the Marymint is a little creamier. Also had the banana nutella waffle, bananas and nutella are always a winning combination, can't go wrong there. No wifi yet but I'm sure it will come soon. Friendly staff, delicious offerings, antique filament lightbulbs and best of all, Bieber and MJ high above on a mural watching over you. This place is aces. Golden age of milk tea See all photos from Khang H. for The Factory - Cafe With a Soul                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    0.000525\n",
+       " 10/25/2016 1 check-in Check out this video for a review! youtube.com/watch?v=N8Ki…  Cool new place in Austin! It's always great to see places doing something new and unique. The seating arrangements and atmosphere are definitely fun. One thing is that there's no internet, so don't plan on coming here to get stuff done!  You get to order on an ipad! yay.  Pros: - the drink choices are really great. You can get something that you want. You can even get beer here. - great for pictures and enjoying some time off. Sit on a swing ... while playing chase. - parking is plentiful in the plaza area. - friendly baristas  Cons: - food menu isn't too big, but that's okay. Not gluten free for the wife. - very pricey. If you need a place to come on a weekly basis, you're going to need to be a balla.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              0.000525\n",
+       " 10/9/2016 1 check-in I am very impressed with this place. The food portions were so perfect and not mention delicious! The waffle architects (staff) were all so accommodating and nice. We were able to talk to one of the owners for a bit and he was very helpful with his recommendations and accurate. I highly recommend this place. I will definitely be coming back when I am in Austin again. Nutella and Banana waffles. Chicken and Waffles, Olive Oil Pound Cake, and Milk Tea! Yummy.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       0.000525\n",
+       " 11/17/2016 Craft coffee drinks, tea, and beer/wine. Friendly staff, good music and nice atmosphere complete with with a few rope swings from he ceiling. And let's not forget the amazing waffles!! Nice place to chill with friends.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    0.000525\n",
+       " 11/14/2016 Enthusiastic and earnest desire to be excellent, try new things and develop new menu ideas, smiles, not in your face - best almond pound cake I've ever had (worth the 5 stars alone), and a fantastic cup of red rooibos iced tea.  next to Hanabi.  fantastic new spot.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     0.000525\n",
+       " 11/10/2016 7 check-ins The Factory Cafe is overall such a beautiful and really cool place to just hang out with friends or work on homework. You'll probably see the people around you taking the time to perfect their aesthetic Instagram pictures and Snapchat stories (myself included). Although the cafe itself doesn't provide wifi, it's within range of other places with wifi so that shouldn't deter you from going! This place looks like it literally came straight off of Pinterest! So cute!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              0.000525\n",
+       " 11/21/2016 This spot is super cute (\"like eating in a Pottery Barn\"), with drinks that are unique and with a somewhat limited menu. We tried the chicken and waffles, which was surprisingly delicious and our drinks were also tasty. I had the Livin La Vida Mocha and my husband had the pour over. I will definitely return with company, but prices weren't good enough to make this a regular stop in our rotation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                0.000525\n",
+       " 11/9/2016 1 check-in Guys, this place is amazing. Limited food menu but both waffle offerings will blow you away! Crazy good spices on the chicken. The coffee and matcha were both stellar as well. Service was friendly and efficient. The space is stunning and cozy. Highly recommend. Will be my new go-to relaxation spot in the area.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             0.000525\n",
+       " 11/20/2016 The store has A+ decoration, but honestly, the coffee it made is not as good as other coffee shop in the surrounding area. It has no wifi, so good for hang out with friend or read a book. Not sure why there is no restroom here. Ordering app is well made, but probably won't be my coffee stop because of the quality of food/coffee. It's selling you the atmosphere they created, so don't expected the food/coffee. Probably would be a good date spot. 8 dollar tiny chicken and waffle. One of the most expensive chicken and waffle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               0.000525\n",
+       " 10/25/2016 1 check-in Ok, let's try this approach...  Pros: Music Seating Decor General ambiance Service  Cons: iPad ordering (I'm a crotchety old man, kids) Limited coffee menu, or menu in general Relatively expensive Food is pretty but lackluster  I'm still sitting here as I type this and I'm less than overjoyed with the experience, sadly. The space and vibe are great but not quite familiar or intimate enough to beat out a place like Genuine Joe down the street. It seems like they bank on the vibe, and fall short the rest of the way. (This would be a great hangout for the artsy/design crowd having a collaborative meeting.)  The staff is great but the iPad ordering system limits your required interaction with them. They take pride in no wifi to increase interaction but then use iPads instead of people?  Seating is ample, if cramped in a surprisingly large space.  But the food, kids. So pretty, but again lackluster. I tried the Pop+art ($5) and the Nutella Waffle ($4.75) and they both sit on their respective tiny awkward plates half eaten. (Yes the plate liners are cute) The waffle is a great idea but the waffle itself  has no flavor and there's no delight. The tart is similar - the pastry crust is much too thick compared to the Smuckers jam tasting filling and it is essentially just pure sugar. The pastry itself doesn't even taste buttery or crisp. Meh. There appears to be no soul in this confectionary.  Coffee- passable. But at $4 for a cortado and a $1.50 up-charge for almond milk- I'll pick another place.  I get why the reviews are so good here, but there are much better places nearby for that \"cafe with a soul\" feel. This feels like an ACL pop-up. Going for that?  Great, come here. Pop+art and Cortado Emailed receipt and satisfaction survey. See all photos from Kimberlee A. for The Factory - Cafe With a Soul     0.000525\n",
+       " 10/18/2016 I got waffle wasted at The Factory!!! Not your average coffee shop! Super social without wifi, novel idea!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    0.000525\n",
+       " 11/9/2016 1 check-in Listed in In Search of Fantastic Coffee So, I really didn't want to write this review. I didn't want to tell anyone how awesome The Factory - Cafe With a Soul is because I don't want it overrun and super busy with no place to sit like so many other decent coffee shops in Austin. I happened to come in here with a friend mid-week and we sat here for several hours, enjoying the peace and quiet, the atmosphere, and the awesome coffee.  This place is a little eclectic - lots of peculiar art, books, games, knick-knacks, and an almost head-scratching drink and food menu. Waffles and pop tarts...and beer? And... coffee mojitos? Well, it works. Whatever is going on here, it works fabulously. They serve Stumptown Coffee, which as someone from the Northwest, I totally appreciate. They also brew coffee correctly. There is not a hint of bitterness or overcooked milk going on here. The iPad ordering screens are mostly cool, (although they need more options for customization) and the million different types of seating, (couches, pillows, swings, big chairs, little chairs, bar seating, regular tables) is both delightful and refreshing. The baristas make foam art - something that I have only seen at Houndstooth here in Austin. Hanging out here was a wonderful experience - this is a five star establishment, the best coffee house I've been to in Austin, and I will be back - time and time again. Double espresso with tonic water. Beautiful Macha A beary lovely mocha!                                                                                                                                                                                                                                                                                                                                                                      0.000525\n",
+       "Name: full_review_text, dtype: float64"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# inspect reviews\n",
+    "df.full_review_text.value_counts(normalize=True)[:15]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## How do we want to analyze these coffee shop tokens? \n",
+    "\n",
+    "- Overall Word / Token Count\n",
+    "- View Counts by Rating \n",
+    "- *Hint:* a 'bad' coffee shops has a rating betweeen 1 & 3 based on the distribution of ratings. A 'good' coffee shop is a 4 or 5. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 96,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "STOP_WORDS = nlp.Defaults.stop_words.union([\"coffee\",\"got\",\"check-in\",\"i'm\",\"i've\",\"place\",\"it's\",\" \",\n",
+    "                                            \"come\",\"1\",\"try\",\"order\",\"-\",\"time\", \"drink\",\"shop\", \"like\"])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 97,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "tokens = []\n",
+    "\n",
+    "for doc in tokenizer.pipe(shops['full_review_text']):\n",
+    "    \n",
+    "    doc_tokens = []\n",
+    "    \n",
+    "    for token in doc: \n",
+    "        if token.text.lower() not in STOP_WORDS:\n",
+    "            doc_tokens.append(token.lemma_.lower())\n",
+    "   \n",
+    "    tokens.append(doc_tokens)\n",
+    "    \n",
+    "df['tokens'] = tokens"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 98,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def count(docs):\n",
+    "    \n",
+    "    word_counts = Counter()\n",
+    "    appears_in = Counter()\n",
+    "    \n",
+    "    for doc in docs:\n",
+    "        word_counts.update(doc)\n",
+    "        appears_in.update(set(doc))\n",
+    "        \n",
+    "    temp = zip(word_counts.keys(), word_counts.values())\n",
+    "    \n",
+    "    wc = pd.DataFrame(temp, columns=['word', 'count'])\n",
+    "    \n",
+    "    wc['rank'] = wc['count'].rank(method='first', ascending=False)\n",
+    "    \n",
+    "    total = wc['count'].sum()\n",
+    "    wc['pct_total'] = wc['count'].apply(lambda x: x / total)\n",
+    "    \n",
+    "    wc = wc.sort_values(by='rank')\n",
+    "    wc['cul_pct_total'] = wc['pct_total'].cumsum()\n",
+    "    \n",
+    "    t2 = zip(appears_in.keys(), appears_in.values())\n",
+    "    ac = pd.DataFrame(t2, columns=['word', 'appears_in'])\n",
+    "    wc = ac.merge(wc, on='word')\n",
+    "    \n",
+    "    total_docs = len(docs)\n",
+    "    wc['appears_in_pct'] = wc['appears_in'].apply(lambda x: x / total_docs)\n",
+    "    \n",
+    "    return wc.sort_values(by='rank')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 99,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(37589, 7)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>word</th>\n",
+       "      <th>appears_in</th>\n",
+       "      <th>count</th>\n",
+       "      <th>rank</th>\n",
+       "      <th>pct_total</th>\n",
+       "      <th>cul_pct_total</th>\n",
+       "      <th>appears_in_pct</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>105</th>\n",
+       "      <td>great</td>\n",
+       "      <td>2454</td>\n",
+       "      <td>3272</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>0.008891</td>\n",
+       "      <td>0.008891</td>\n",
+       "      <td>0.322216</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>153</th>\n",
+       "      <td>good</td>\n",
+       "      <td>2158</td>\n",
+       "      <td>2896</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>0.007869</td>\n",
+       "      <td>0.016760</td>\n",
+       "      <td>0.283351</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>love</td>\n",
+       "      <td>1689</td>\n",
+       "      <td>2161</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>0.005872</td>\n",
+       "      <td>0.022632</td>\n",
+       "      <td>0.221770</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>750</th>\n",
+       "      <td>little</td>\n",
+       "      <td>1230</td>\n",
+       "      <td>1479</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>0.004019</td>\n",
+       "      <td>0.026650</td>\n",
+       "      <td>0.161502</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>803</th>\n",
+       "      <td>work</td>\n",
+       "      <td>1206</td>\n",
+       "      <td>1475</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>0.004008</td>\n",
+       "      <td>0.030658</td>\n",
+       "      <td>0.158351</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       word  appears_in  count  rank  pct_total  cul_pct_total  appears_in_pct\n",
+       "105   great        2454   3272   1.0   0.008891       0.008891        0.322216\n",
+       "153    good        2158   2896   2.0   0.007869       0.016760        0.283351\n",
+       "3      love        1689   2161   3.0   0.005872       0.022632        0.221770\n",
+       "750  little        1230   1479   4.0   0.004019       0.026650        0.161502\n",
+       "803    work        1206   1475   5.0   0.004008       0.030658        0.158351"
+      ]
+     },
+     "execution_count": 99,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wc = count(df['tokens'])\n",
+    "print (wc.shape)\n",
+    "wc.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 100,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>word</th>\n",
+       "      <th>appears_in</th>\n",
+       "      <th>count</th>\n",
+       "      <th>rank</th>\n",
+       "      <th>pct_total</th>\n",
+       "      <th>cul_pct_total</th>\n",
+       "      <th>appears_in_pct</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>105</th>\n",
+       "      <td>great</td>\n",
+       "      <td>2454</td>\n",
+       "      <td>3272</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>0.008891</td>\n",
+       "      <td>0.008891</td>\n",
+       "      <td>0.322216</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>153</th>\n",
+       "      <td>good</td>\n",
+       "      <td>2158</td>\n",
+       "      <td>2896</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>0.007869</td>\n",
+       "      <td>0.016760</td>\n",
+       "      <td>0.283351</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>love</td>\n",
+       "      <td>1689</td>\n",
+       "      <td>2161</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>0.005872</td>\n",
+       "      <td>0.022632</td>\n",
+       "      <td>0.221770</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>750</th>\n",
+       "      <td>little</td>\n",
+       "      <td>1230</td>\n",
+       "      <td>1479</td>\n",
+       "      <td>4.0</td>\n",
+       "      <td>0.004019</td>\n",
+       "      <td>0.026650</td>\n",
+       "      <td>0.161502</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>803</th>\n",
+       "      <td>work</td>\n",
+       "      <td>1206</td>\n",
+       "      <td>1475</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>0.004008</td>\n",
+       "      <td>0.030658</td>\n",
+       "      <td>0.158351</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>365</th>\n",
+       "      <td>well</td>\n",
+       "      <td>1238</td>\n",
+       "      <td>1422</td>\n",
+       "      <td>6.0</td>\n",
+       "      <td>0.003864</td>\n",
+       "      <td>0.034522</td>\n",
+       "      <td>0.162553</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>164</th>\n",
+       "      <td>nice</td>\n",
+       "      <td>1222</td>\n",
+       "      <td>1412</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>0.003837</td>\n",
+       "      <td>0.038359</td>\n",
+       "      <td>0.160452</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>333</th>\n",
+       "      <td>don't</td>\n",
+       "      <td>1133</td>\n",
+       "      <td>1395</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>0.003791</td>\n",
+       "      <td>0.042149</td>\n",
+       "      <td>0.148766</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>419</th>\n",
+       "      <td>food</td>\n",
+       "      <td>1109</td>\n",
+       "      <td>1391</td>\n",
+       "      <td>9.0</td>\n",
+       "      <td>0.003780</td>\n",
+       "      <td>0.045929</td>\n",
+       "      <td>0.145614</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>pretty</td>\n",
+       "      <td>1069</td>\n",
+       "      <td>1342</td>\n",
+       "      <td>10.0</td>\n",
+       "      <td>0.003647</td>\n",
+       "      <td>0.049576</td>\n",
+       "      <td>0.140362</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>30</th>\n",
+       "      <td>latte</td>\n",
+       "      <td>955</td>\n",
+       "      <td>1274</td>\n",
+       "      <td>11.0</td>\n",
+       "      <td>0.003462</td>\n",
+       "      <td>0.053037</td>\n",
+       "      <td>0.125394</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>691</th>\n",
+       "      <td>ice</td>\n",
+       "      <td>929</td>\n",
+       "      <td>1270</td>\n",
+       "      <td>12.0</td>\n",
+       "      <td>0.003451</td>\n",
+       "      <td>0.056488</td>\n",
+       "      <td>0.121980</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>246</th>\n",
+       "      <td>go</td>\n",
+       "      <td>1032</td>\n",
+       "      <td>1250</td>\n",
+       "      <td>13.0</td>\n",
+       "      <td>0.003397</td>\n",
+       "      <td>0.059885</td>\n",
+       "      <td>0.135504</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>605</th>\n",
+       "      <td>come</td>\n",
+       "      <td>1051</td>\n",
+       "      <td>1246</td>\n",
+       "      <td>14.0</td>\n",
+       "      <td>0.003386</td>\n",
+       "      <td>0.063270</td>\n",
+       "      <td>0.137999</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>907</th>\n",
+       "      <td>people</td>\n",
+       "      <td>1015</td>\n",
+       "      <td>1223</td>\n",
+       "      <td>15.0</td>\n",
+       "      <td>0.003323</td>\n",
+       "      <td>0.066593</td>\n",
+       "      <td>0.133272</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>42</th>\n",
+       "      <td>austin</td>\n",
+       "      <td>1034</td>\n",
+       "      <td>1188</td>\n",
+       "      <td>16.0</td>\n",
+       "      <td>0.003228</td>\n",
+       "      <td>0.069822</td>\n",
+       "      <td>0.135767</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>200</th>\n",
+       "      <td>friendly</td>\n",
+       "      <td>1128</td>\n",
+       "      <td>1170</td>\n",
+       "      <td>17.0</td>\n",
+       "      <td>0.003179</td>\n",
+       "      <td>0.073001</td>\n",
+       "      <td>0.148109</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>47</th>\n",
+       "      <td>definitely</td>\n",
+       "      <td>1011</td>\n",
+       "      <td>1154</td>\n",
+       "      <td>18.0</td>\n",
+       "      <td>0.003136</td>\n",
+       "      <td>0.076136</td>\n",
+       "      <td>0.132747</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>129</th>\n",
+       "      <td>want</td>\n",
+       "      <td>930</td>\n",
+       "      <td>1118</td>\n",
+       "      <td>19.0</td>\n",
+       "      <td>0.003038</td>\n",
+       "      <td>0.079174</td>\n",
+       "      <td>0.122111</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>28</th>\n",
+       "      <td>find</td>\n",
+       "      <td>925</td>\n",
+       "      <td>1088</td>\n",
+       "      <td>20.0</td>\n",
+       "      <td>0.002956</td>\n",
+       "      <td>0.082131</td>\n",
+       "      <td>0.121455</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "           word  appears_in  count  rank  pct_total  cul_pct_total  \\\n",
+       "105       great        2454   3272   1.0   0.008891       0.008891   \n",
+       "153        good        2158   2896   2.0   0.007869       0.016760   \n",
+       "3          love        1689   2161   3.0   0.005872       0.022632   \n",
+       "750      little        1230   1479   4.0   0.004019       0.026650   \n",
+       "803        work        1206   1475   5.0   0.004008       0.030658   \n",
+       "365        well        1238   1422   6.0   0.003864       0.034522   \n",
+       "164        nice        1222   1412   7.0   0.003837       0.038359   \n",
+       "333       don't        1133   1395   8.0   0.003791       0.042149   \n",
+       "419        food        1109   1391   9.0   0.003780       0.045929   \n",
+       "9        pretty        1069   1342  10.0   0.003647       0.049576   \n",
+       "30        latte         955   1274  11.0   0.003462       0.053037   \n",
+       "691         ice         929   1270  12.0   0.003451       0.056488   \n",
+       "246          go        1032   1250  13.0   0.003397       0.059885   \n",
+       "605        come        1051   1246  14.0   0.003386       0.063270   \n",
+       "907      people        1015   1223  15.0   0.003323       0.066593   \n",
+       "42       austin        1034   1188  16.0   0.003228       0.069822   \n",
+       "200    friendly        1128   1170  17.0   0.003179       0.073001   \n",
+       "47   definitely        1011   1154  18.0   0.003136       0.076136   \n",
+       "129        want         930   1118  19.0   0.003038       0.079174   \n",
+       "28         find         925   1088  20.0   0.002956       0.082131   \n",
+       "\n",
+       "     appears_in_pct  \n",
+       "105        0.322216  \n",
+       "153        0.283351  \n",
+       "3          0.221770  \n",
+       "750        0.161502  \n",
+       "803        0.158351  \n",
+       "365        0.162553  \n",
+       "164        0.160452  \n",
+       "333        0.148766  \n",
+       "419        0.145614  \n",
+       "9          0.140362  \n",
+       "30         0.125394  \n",
+       "691        0.121980  \n",
+       "246        0.135504  \n",
+       "605        0.137999  \n",
+       "907        0.133272  \n",
+       "42         0.135767  \n",
+       "200        0.148109  \n",
+       "47         0.132747  \n",
+       "129        0.122111  \n",
+       "28         0.121455  "
+      ]
+     },
+     "execution_count": 100,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "wc.head(20)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Can visualize the words with the greatest difference in counts between 'good' & 'bad'?\n",
+    "\n",
+    "Couple Notes: \n",
+    "- Rel. freq. instead of absolute counts b/c of different numbers of reviews\n",
+    "- Only look at the top 5-10 words with the greatest differences\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 111,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def get_lemmas(text):\n",
+    "\n",
+    "    lemmas = []\n",
+    "    \n",
+    "    doc = nlp(text)\n",
+    "\n",
+    "    for token in doc: \n",
+    "        if token.text.lower() not in STOP_WORDS:\n",
+    "            if ((token.is_stop == False) and (token.is_punct == False)) and (token.pos_ == 'ADJ'):\n",
+    "                lemmas.append(token.lemma_)\n",
+    "    \n",
+    "    return lemmas"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 112,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df['lemmas'] = df['full_review_text'].apply(get_lemmas)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 114,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0                               [streamlined, typical]\n",
+       "1    [beautiful, worthy, pretty, decent, unique, nice]\n",
+       "2    [eclectic, homey, plush, pricy, worth, ample, ...\n",
+       "3    [cool, good, nice, overpriced, extra, loud, od...\n",
+       "4    [computerized, friendly, easy, tart, ideal, ne...\n",
+       "Name: lemmas, dtype: object"
+      ]
+     },
+     "execution_count": 114,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df['lemmas'].head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 115,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df['lemmas'] = df['full_review_text'].apply(get_lemmas)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 118,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# top 20 words from good reviews \n",
+    "\n",
+    "good_reviews = count(df[df['star_rating'] > 3]['lemmas'])\n",
+    "\n",
+    "good_top20 = good_reviews[good_reviews['rank'] <= 20]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 119,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "squarify.plot(sizes=good_top20['pct_total'], label=good_top20['word'], alpha=.8 )\n",
+    "plt.axis('off')\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 120,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# top 20 words from bad reviews \n",
+    "\n",
+    "bad_reviews = count(df[df['star_rating'] < 3]['lemmas'])\n",
+    "\n",
+    "bad_top20 = bad_reviews[bad_reviews['rank'] <= 20]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 121,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAAYAAAAD8CAYAAAB+UHOxAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAADh0RVh0U29mdHdhcmUAbWF0cGxvdGxpYiB2ZXJzaW9uMy4yLjEsIGh0dHA6Ly9tYXRwbG90bGliLm9yZy+j8jraAAAgAElEQVR4nO3dd3gVVfrA8e9Jcm96IZWEkEYLvRcBASmKFdtad2Gtv127rquIq9iwrauuuhYEFWyggIIFC50Ihl5CAoSaBNJDSM/Nvff8/rjXAAICaTfJvJ/n4cmdM2dm3hkm8+acmXtGaa0RQghhPG6uDkAIIYRrSAIQQgiDkgQghBAGJQlACCEMShKAEEIYlCQAIYQwqDMmAKXUB0qpPKVUynFlwUqpn5VS6c6fbZzlSin1hlJqj1Jqm1KqX2MGL4QQou7OpgXwETD+d2WTgaVa607AUuc0wMVAJ+e/O4F3GiZMIYQQDe2MCUBrvQoo+l3xBGCW8/Ms4Mrjymdrh1+BIKVUZEMFK4QQouF41HG5CK11tvNzDhDh/NwOyDyuXpazLJvfUUrdiaOVgLuXZ/+A2IjfVxGtkEeBcnUILYYlqJUcqxY22ICbye7qEM7akV0ZBVrrsLouX9cEUEtrrZVS5/xfrLWeDkwHCE6M1Re9P/kMS4jWIHhmvU85w8iY4OnqEBqGvWUlMr/wMleHcNbmjLjrYH2Wr+tTQLm/de04f+Y5yw8B7Y+rF+0sE0II0czUNQEsAiY5P08CFh5XPtH5NNAQ4OhxXUVCCCGakTO2x5VSnwOjgFClVBYwFXgR+EIpdRtwELjOWf174BJgD1AB3NIIMQshhGgAZ0wAWusbTzNrzCnqauDu+gYlhBCi8ck3gYUQwqAkAQghhEFJAhBCCIOSBCCEEAYlCUAIIQxKEoAQQhiUJAAhhDAoSQBCCGFQkgCEEMKgJAEIcQp2u83VIbQ4u+Z8xd6vv2fX5wvI37rDpbEkT3uFmvLyP6yTuXw1VUVHzmm9ZdmFLJ70bH1Cq5W7eTerHn27QdZVVzI2r2jVamqq+XHle5RXFKO1nf69LuXXjQu49rIpeHv5k1dwgDUb5nHl+IdZt2URJaX5lJQW4OcbzPmDb2Dl2k8oLXe8D2n4oOuJDO/o4j06e4tvupOLP5ve5NvtcuPVTb7N3xv8+MNnrJO5fDX+7dvhFdzmrNertcYx4k3Ts1ttuHm4N+g6JQGIVi3jcAq+PkFcNvY+AKotFfy6ccFp6x8pzuaqix/Bw8PMz6tm0LvbWCIjOlFaVsg3S/7LTVc+01Shtwjp8xaRtTwJc2AA3qHBBCbEseXN9wnv34eooQNJ+/gLctdvRrm5E9a7B90m3Ujuhs2kz1uI3WrF7O9H3/v/jmdQILvmLqAiN4/ynFwsJWV0mHAJseMuoCAljd1zF+Dh7UV5Ti4h3bvS845JKDc3DiWtZc+Cb0Brwvv1oetfrgdg6d8f4vyXnsZaVcW6aa/QJrEzR3btwSu4DQMffYDcTVs4um8/m994F3ezmWHTnqQ06xCpsz5DWyvwDPRj8GMT8Q4N5NAv2/jlyRm4e5pQbm4oN8VPd76IzWIlekQfet56GQAps77n4E/r8Azyxye8DcGd25N44ziW3vcafe+6muDEWKqLy/jxzhe54ovnTjiOhakH2PTml9gsNbibTQx+bCIBMRHsW7yWrJVbsFZWo+12xrz5UIP+/0kCaCRl2YWsnvw2F896okmXFScKCYpmzfp5rN04n9joXkRFdPrD+nHte+PhYQYgKzuNouLDtfNqLFXU1FRhMnk1aswNTWtN2uy55G/aBkrR6doriBo+2Hlh/Rqzvx+lmYcITIij7wP/h1KK3I1bSf3oczw8zbRJ7ExFbh6DHj/x4lO8dz+Hk5IZ8eqz2G12Vj/8JIEJcbXzLaVl5CRvZNR/X0IpVdsl0yaxM8NemIpSiowlK9i78Du6TboJgJKDmQx/fiq26mpW/fMJIvr3cWxrzz5Gvv4CPqGhJE/7N9nJGwju0om0T+Zy/kvPYPLzJfnZl8lZt5G2g/qfEGd5di59H7iL3n+/jY3/eYvs5PVEjxjGgcVL6DbxBoI6JmC3Wtkx82MGPPoAIZ3cyFi6gW0zFjF48l/Y8vYC7FYro994kF1zlpCzaSfj3nsUtGb1Y++StyUdd08TWSu3MP6Dx7HbbPx42wsEd27P2QqIjWDMmw/h5uFOzoadbJu+kOHP3QnAkfRMxn/4OJ4Bvuf8f38mkgBEqxYUGMGfLv8XB7O2s27z17SL7Ipyc6ttxttsNSfU9/A49hYure1cc+ljeLibmjTmhpbz6wZK9mcw4tXnsJSWsvqRpwju1gWAkv0HGfn683gFB/HLlOc4sjOdwA5xbH/3I4Y+NwWfiDA2vXrqfuqi1N20Hdwfd09P3IGIgX1PmO/h442bycS2t2cQ3r8PEf0d86sKi9j06v+oLi7GbrXiE37sjYZtB/bD3dOMu6eZkO5dKd6zDw8fH4I6JuAbEQ5A1LAhHNm5Gzd3d0K6dcUzMACAducPpTB150kJwDs8jMD4WAACE+KozCs4aV/KDudQmplF8rMv4+ZhR9vseIUEYCmtoKaiCt+IEEK7x7PHy4y10sKPt70AgLWymtKsPKwV1bQb3gt3TxPumGg3rOc5/R9ZyirZ9PxsyrLyAIXdduweVNsBiY1y8QdJAI3KbrOz9pkPObI7g4D4KIY8Pomdc5ZweM02bNU1hPRIYODDN6GUomhXBute/BiAtgO7ujjy1qO8ohhPT1+6dBiCp9mHtPTVBPiFkF94kNjonuw9uOm0y7aP6s72tGX07XERAAVFmYQGn/1fdc1FUdpuos4fgnJ3wzMokJDuic4LqzdBHRPwDg0GIDA+hoq8fNy9PPGJCMMnwnFhjho+hIyfV5zzdt3c3Rn+8lQKtqaRs3YdB35YwnlPPUbKzI9JuHw8bQf2c7RCvvjq2ELqNK+PPKn47F8z6W46dplTbm7YLJaTK2mNX/t2DH9+6gmvhLSUVgDg4W3+rSKegb6M/2DKCYvv+mLZabfv5u6Gtjv/4LDUnLLO9pnfEtG3M+dP+z/KsgtZdv9rtfM8vBrv1aDyFFAjKs3IpeNVI7jkk6mYfL3Y89VKOl09kgunT+biWU9gq67h8JrtACS/MJt+91/H+A8fd3HUrUvhkUPM++555i56hvVbv6F/r0sZ0PtyktbP5ctvp6HU6X8Fhg+6nrzCg8xZ9DSffz2VlF0rmzDypuF23MURNze07exfiB7SrQs56zZiq7Zgrawkd8OWE+ZbK6uwllcS0a833f56MyUHMhzlFRW1N16zViadsEzu+k3YLBYspaUUpqYR1DEBcHQBVeTmo+12stckE9y1M0GdOlCUuhNLSSnaZudw0lpCuiWedfwe3l5Yq6oA8IuKxFJSypFd6YDjhuvR/Ycx+/tg8vHCWuVIGrZqKzVlldRUOJaryC+m6kgpoT0TOPzLdmzVNdRUVHF4TUrtdnzbhlC027HvmSs2nzKWmvJKvEODANi/eO1Z70N9SQugEfmEtyGsZwcA4sYNYvf85fhGhpL2+c/YqixYSssJjIskrFdHasoqCe/j6J+Ou2gQ2cmufYyutYhp152Ydt1PKr/5qudOKhvU54oTpr29/Llo5J2NFltTCe7WhYyfltN+1HAsZWUU7dhF14nXU3bo1G9r9YuKpCI3n4q8fHzCwzj8y7pT1gvsEEfUsMGseuhfmAMDCOoYf8J8a2UV6198HbvFCmi6/dXRz9/5uqvY9J+3MPn5EtKjKxW5+bXL+Me0Z+1TL2ApKaPTNRPwCm5D2eEcgjokkDJzdu1N4LaD+qPc3Ej883WsfeqF2pvAv+/++SPtLzif7dM/qr0J3P8f97Ljg0/Y8UEZdpudLn+6gMD4KPrcdTW/PDmDH259nrYDEzH5erPk768A4OHjyZB//ZWQrnFEDevJD7dMwzPYn8CEKEx+3gAk3jCWX6bOYO83SUQN6XHKWLreOI7k52ez4+PFp63TGJSrHmk6XnBirL7o/cmuDqNBlWUXsuy+17jiS8eFJnfjLnYvWEFByj4unP4ovhHBbP/gWwC6/Gk0P9wyjSvmTQOgeG8Wa5/5sFXeBA6eKX9znK2MCfVr+v/2GOgf3QTet3Bx7c3d7e/PJqhDPO1Hn0/u+s2kzp6Lh6eZwI4JWCur6Pfg3+oWiP3sumt2zV2Ah5cXHSZcckJ5QUoa+xZ9z6Ap/6jb9s/R8V1A56Kmoqq2tbD03lcZ+PBNBHeJaeDoTjRnxF0btdYD6rq8/DY2oorcIgpS9hHaI4GDS9YT1rMDBSn78Azyo6aiiqyVm4ke2dfRzPTzJn/bHsJ6deTAT+tdHbpoBX77DoBSim6TboBJN5wwP7RHV0J7HLvf1POOibWfQ3p05YI3X0RrTcr02QR1jGuSmFuy9a98RsmBHGyWGuLHD270i39DkATQiPxjIkj/aiXrXvyYgLhIOl45AktpBYsnPYd3cADBibG1dQc/NtFxE1gp2g48+35MIRpDxpIVZC3/BbvVSkB8LLEXXtDo2+xy/am/QPb7RNVcDX3yVleHcM6kC0g0KekCOnv17QJqNs6yC6i5qGsXkCvUtwtIngISQgiDkgQghBAGJQlACCEMShKAEEIYlCQAIYQwKEkAQghhUJIAhBDCoCQBCCGEQUkCEEIIg5KvZYomlT3Cx9UhtCDyYnrRuKQFIIQQBiUtACFEowprd8TVIYjTkBaAEEIYlLQAhGimLum5zdUhNIj1Bc1/XHyjqlcLQCn1oFJqh1IqRSn1uVLKSykVr5RKVkrtUUrNVUqZz7wmIYQQTa3OCUAp1Q64Dxigte4BuAM3AC8Br2mtOwJHgNsaIlAhhBANq75dQB6At1KqBvABsoHRwE3O+bOAp4B3/mgl7kVuBMyVxwONIL+fqyMQQvymzi0ArfUh4BUgA8eF/yiwESjWWlud1bKAdqdaXil1p1Jqg1JqQ1VlaV3DEEIIUUf16QJqA0wA4oEowBcYf7bLa62na60HaK0HeHn71zUMIYQQdVSfm8Bjgf1a63ytdQ2wABgGBCmlfutaigYO1TNGIYQQjaA+CSADGKKU8lFKKWAMkAosB6511pkELKxfiEIIIRpDfe4BJAPzgE3Adue6pgOPAg8ppfYAIcDMBohTCCFEA6vXU0Ba66nA1N8V7wMG1We9QgghGp8MBSGEEAYlCUC0aHuX/MjP/3qE9dPfPqH8yIF9bP1sdoNs42DSKrZ+OguAtIXzSf/huwZZrxCuJmMBiRZt3/IlDP/HZLyDQ2rL7DYbbeISaBOX4MLIhGj+JAGIFmvz7A8oz89jzev/pqKokMje/SgvyMMnOIS4kaNJ//F7ht7/MNbqKrZ+OpvSw1nYrTYSJ1xNVN/+HExaRfbWTdgs1ZTn5RHVbwA9/nQjAAeTVrLr+28w+/gQEB2Du8l0wrbL8nJZ984bjJ46zTGdm8O6d9+snRaiJZAEIFqsvhNvJS9lG8P/+Tj7lv1EztbNjJj8JO5mM/k7U2vr7fp2IWFdu9H/1juxVJSz4rmphHfrDsDRjIOMnjoNN5MHP0/5JwljLsTNzY20hQu44MlnMXn7sPrf0wiKiTth237hEZi8fSjOOEhQTCwHk1YSO3xkU+6+EPUm9wBEq9G2dz/czScPPpu3I4Xd33/LsqemkPTyNOw1NVQUFgIQ1rU7Jh8f3E1mAqLaUVFYQNG+vYR26YqnfwBuHh5EDxxyyu3FjRhFRtJKtN3OofXJRA8+r1H3z9V2J2eyd1PTf6+zNLuQr25+4aTypOc/p3h/TpPH05pIC0C0Gh6enqeZoxl89334t406ofTIvr0ndu24uaFtZ/8e3qj+A0lb9BWhWzcTFBuHp1/rHtJkd3Imnj4mOvQ75fBeTW74lBtdHUKLJwlAtHrh3Xuyb+nP9LppIkopig8eICg27rT1gxM6sO3zj6kuK8Xk5c2hDckEto89qZ67yUxE955s/fhD+t5yRyPuwZlVV9Qw475vKM4tw26zM3hCN/Zvzeb/3p7A1iV7+OCB7/jPpnvQWvPM+I94dvnt5B8sZu7TSyktqsDsbeLm58bRtkMIpYUVfP7kEoqySwD40+MXEBThR9LnW1HubqxfmMZ1T46m48DoJts/bbWzcupsCndlEZTQlhFP/pmfH3qPgfdOILRrDLsXrWX7J0sx+3kT3KkdbiYPznv42jOvuIGUZhfy84PvEdE7gbzt+/EJC2TMS7dTUVDCr698SVVxGR5eZoZOvoGA9mHM/9OzXDv/SSxllXw+fgrj37qHtn078v3f32DYlBsIbB/eJHFLAhCtXuLlV7Ftzscsm/oYWmt8QsMYev/Dp63vFdSGrhOuZuXzT2P28Tnlxf837YcM4/DmDUR079kYoZ+11FX7CYrw4+4ZVwNQWVrN6jmON4rt2ZBFZOcQDm7PwWa1E9+7LQCfPfEzNz4zlvC4Nuzfks2cp5bywMfX8eVzyxl9Sz86Doim6HAJb94yn6k/3sLwG3vj6WNi3O0Dm3z/jmbkMWzKjUT0TiDpuc9Im59UO68i/yhbP/yJKz56GJOvFz/c8xZtOjZ9K6UkK5+Rz0xk2GM3sPzxDzm4Yivp3yZz3qPXEdg+nPwdB1j7ypdc/NY9BMaEU7w/h7LDhYR0iSZ36z7CusdRnnukyS7+IAlAtHAXvfw6AF0nXHNCeVhiN8ISuwHgbjbTd+LJ7yWKHT6C2OEjaqePTwqxw0ee8qbu77dTmL6L2GEjUG6uvZ0W1SWU+S+u5KuXV9HzggQ6DowmLCaQ7D2FHNyaw5hb+pO+Pgtt03QYGE1VuYV9mw4z495vatdRY3F0f+1cc5CcPYW15VXlFqrKLU2+T8fzjQgiorfjsd6E8QNI+3JV7bz81INE9O2AZ6AvAHGj+3A0I7/JY/SLDCaks6NVFJLYntLsIvK2H2DF4x/V1rFZHCPlR/TpQO6WvZQeLqTnxHHsXriWtn07ENq1aV+fKQlAiDr69a3XKM/PY/jDU1wdChHxwTz29Z9JWbmfRa/9QuJ5MXQcGE3qqv24m9xJHBrL7Ed/QNs1Vz06Am3XeAd4MuWbiSetS2vNP+fdhMmzGV0elHJ1BGfkbj52vJSbG5aSUsz+3kyY/chJdSP6dGDXgiQqCkroe8clpHy6jOxNe4jo06EpQ5angISoqyH3PMiYp1/A09/1N3+Lc8swe5sYPKEb424fQEZqLh0HRrPso03E94nEP8SH8uIqcvcXEdU5FG9/T0KiA9i0eBfguOhnpeUB0HVYHCtmb65dd2aqo9zL10y1i1oC5TlHyNu+H4B9P22sbQ0AhHaNIXfzXqpLKrBbbRxYvtUlMf6eydcLv8hg9i91HEutNUXpjqeowrrFkrf9ALgpPDxNBHdqx66v19C2iRNAM0rxQoi6Ory7gAUvrcRNKdxMbtz49FgiO4VQWlBRe7O2XWIoJfneKOdf07f851LmTF3C4reTsdXYGHBpItFdw7nuiQuY8/RSnrtsFnarnY4Do7np2XH0HJ3A+/d+w7Yle5v8JnBgTDhp81eTNO1zguIjSLx6OJlJOwDwDQ+i16RxfHPbf/AM8CUwNhyzn1eTxfZHRj49kbUvf8HWj37CbrWRMLYfwZ3a4W72wDciiPDujvtLEb0T2P/zJtp0iGzS+JTWukk3eCph4fH66uuecnUYognk95O/Oc7WuBGbz1ypBVhf0Pj92jUV1Zh8PLFbbSybPJNOlw0mdlTvRt+uq3143v0btdYD6rq8/DYKIVq8zTMWk71hN7bqGqIGJxIzsperQ2oRJAEIIVq8Qfdd6eoQWiS5CSyEEAYlCUAIIQxKEoAQQhiUJIBm7sC+jRwpavoRGIUQrZ8kgCZkt5/9SJO/ObB/E0eKDjdCNEIIo5OngBrQpvULSd+9Fi9vf/z8ggkNiyPjwBZCQmPIyU6nY6fBRLbryq+/fE5NTRVeXv6MGnM7Pr5BpO1Ywc7UldhsVgICwxk99k4KCjI4uH8L2Yd2sXnDIsZdfC8BgU03UJQQonWTBNBA8nL3sX/vBq65/hnsdhsLvniK0LA4wPGX/9XXPYXdZuWbr1/kwkvuw9s7gL3pyaz7dT6jxtxGfIcBdO0+CoD1v85nZ9oqevQaR2x8H2Ji+5DQselHYBRCtG6SABpIbk46sfH98PBwvJEqNq5P7byEjoMAKC7Ooagwi+8X/hsAu9b4+AYCUFSYxYbkBVRXV2CtqSI6pkcT74EQwmgkATQBk+m3N1Vp2gS348prnzipzsqlM7jwkvsICY1hV9pqsg/vbNogm0j0ogJXh9ByjDhzFSHqQ24CN5CItp04eGALVquFGksVGQe2nFQnMCiSqspScnP2AGC3WSkqdDzhY6mpwscnCLvNyp7dv9YuYzJ5UVNT1TQ7IYQwFGkBNJDwiARi4/swf84TePsE0iYkGrPZ+4Q67u4ejB1/N2tWf4rFUom22+jR+0KCQ9oxcPDVfD3vGby8/QmPSKi96HfoNIRVyz8kZdvPjBt/j9wEFkI0GBkNtAHVWKowmb2w1lSz6KsXGHHBX2tvBAsHz6xiV4fQYnR9JdPVITSIphgN1KhkNNBmZNWKjyguOoTVVkPnxOFy8RdCNGuSABrQmAv/5uoQRCuyeGOfM1cyGI9QuR/WkOQmsBBCGJQkACGEMChJAEIIYVCSAIQQwqDqlQCUUkFKqXlKqZ1KqTSl1HlKqWCl1M9KqXTnzzYNFawQQoiGU98WwH+BH7TWiUBvIA2YDCzVWncCljqnhRBCNDN1TgBKqUAco5XMBNBaW7TWxcAEYJaz2ixA3tYshBDNUH1aAPFAPvChUmqzUmqGUsoXiNBaZzvr5AARp1pYKXWnUmqDUmpDVWVpPcIQQghRF/VJAB5AP+AdrXVfoJzfdfdoxzgTpxxrQms9XWs9QGs9wMvbvx5hCCGEqIv6JIAsIEtrneycnocjIeQqpSIBnD/z6heiEK6VvHMxm/Ysc3UYQjS4OicArXUOkKmU6uIsGgOkAouASc6yScDCekUohBCiUdR3LKB7gU+VUmZgH3ALjqTyhVLqNuAgcF09tyFEvaRlrGPz3uWAIjQgiiFdL2bp5jlUWsrwNvsxtu9N+Pu0oaSi8JTlQrRW9XoMVGu9xdmP30trfaXW+ojWulBrPUZr3UlrPVZrXdRQwQpxrgpLstmw+2euGno3N13wCCN6XsXKbQtIbD+Qmy54lC7R/Vm5fT7AacuFw64vF7D3m+9OKq/Iy2fFw63nae+V973YIOtZdNk9DbKexiTfBBatWlZBOh2j+uDt6QeAl9mXnCMH6BzdH4Au7QeSXbQf4LTlwlhGvtF6ktmZyHDQQhhc5qok9n77PQrwj4kh8bpr2PLe+1hKy/D096f33+/AJzT0hGWK9+1n67vvAxDWq6cLom48iy67hyu+fQuA3XMWk7kkGdwUEQN70OOOayg7nMfWNz7DcrQUd08zfR+aiH9MJOXZ+ax/fga2ymoih/Z28V6cHUkAolWLDu3E9+s+oE/HUXibfamylBMZHEf6oU0kth/I7qwNRAUnAJy2vDUrzcwifcFChj3zJJ4B/ljKytjy9nu0H3E+7UeeT8bylaR89DGDHn7whOW2vPs+PW+ZSEjXRFI/+dxF0TeunHXbyV6zlZFvPYaHlyeWknIAtrz2MX3u/zN+0REUpe1jyxufcv4rD7Pt7bkkXD6SmAuHsm/hchdHf3YkAYhWLSQgkgGdx7Eg6U2UciMssB0jel7D0s2fs2nPstqbvcBpy1uzgh2pRA4ZhGeA47s4Zj8/itL3MOCh+wGIPn8YqZ/NOWGZmvJyasorCOmaWFsnb8vWpg28CeRvSiPmoqF4eHkCYA7wxVpZReGOvax79t3aerYaKwCFKXsYPNXxUqj2Y4eQ8n7zv4ckCUC0el1jBtE1ZtAJZVcNu/ukegE+wacsH5x4caPFJloWbdeY/HwY/d7UU1dQqmkDqie5CSyEgYV270b2r+uwlDqGY7GUlRHcuROH1vwKwKGkNYQkdjlhGZOvLyZfHwp37gIgK2lN0wbdRML7dSPjxzVYq6oBsJSUY/L1xrdtKIdWbgBAa83RvZkAhPToSNby9QBkLk0+9UqbGWkBCGFg/u2j6XTVFax5ehrKzY2AuFh6/HUiW96dzt5vv6+9Cfx7ff52h+MmsFKE9erhgsgbX8SgHhTvzWTFXdNwM7kTMagn3W+7mgGP3caW/37Kzk+/Q1ttRF8wkMAO7el11/Wsf34G6XN+aDE3gZVjuB7XCguP11df95SrwxBNwDOr2NUhtBgHbgxxdQjNjrwU/kRfjb1jo9Z6QF2Xly4gIYQwqGbRBdSmbSlXPSqDbRnB9/f2c3UIQggnaQEIIYRBSQIQQgiDkgQghBAGJQlACCEMShKAEEIYlCQAIYQwKEkAQghhUJIAhBDCoCQBCCGEQUkCEEIIg2oWQ0EI48i619fVITR7PSKyAehDiYsjaX5yZsa6OoRWRVoAQghhUJIAhBDCoCQBCCGEQUkCEEIIg5IEIIQQBiUJQAghDEoSgBBCGJQkACGEMChJAEIIYVCSAIQQwqAkAQghhEFJAhBCCIOSBCCEEAYlCUAIIQyq3glAKeWulNqslPrWOR2vlEpWSu1RSs1VSpnrH6YQQoiG1hAtgPuBtOOmXwJe01p3BI4AtzXANoQQQjSweiUApVQ0cCkwwzmtgNHAPGeVWcCV9dmGEEKIxlHfFsDrwCOA3TkdAhRrra3O6Syg3akWVErdqZTaoJTacLSoqp5hCCGEOFd1TgBKqcuAPK31xrosr7WerrUeoLUeEBjsVdcwhBBC1FF9WgDDgCuUUgeAOTi6fv4LBCmlfnvXcDRwqF4RCuFiiy67B4DynAKW3D7VxdE0jBcHPQdAaV4JXz40B4Ccndmkr9pdW+fA+v1kbsmonV759jLWfpTUtIG6UOnRfOZ9POWs6+/esZrysiONGFHDq3MC0Fo/prWO1lrHATcAy7TWNwPLgWud1SYBC+sdpRCiUfiHB/CnV28AIHdnDntWH0sAB9fvJ+u4BCD+2O7UJCrKi10dxjnxOHOVc/YoMEcp9RywGZjZCNsQ4q1W9H4AABANSURBVJSsldWse/Y9KguOoO12Em++jB0z5hN9wSBy129HubvT98G/sGPGAsoP59PpuguJv3wU1soqfn3yf1hKK9BWG11vuZKoYX1cvTuNrvjQEebc8yl3fPE3VvxvGdbqGjI3Z9D94p5s/GIDbu6K7d9uY/xjl5ywXFFmET9M+5byonJM3iYumzqB0IQwF+1F49F2O6uWfEDu4XR8/dpw4RUPcLQom6Rls7Baq/EPDGfkuNs5lJlKft5+lv/wLu7uZibc8AQeHs3/CfgGSQBa6xXACufnfcCghlivEOcqd30KXiFBDH3+PgBqyirYMWM+3uHBjH5vKtvensvGlz9kxH8nY7fUsPT2qcRfPgo3s4nBT92Fydeb6qOlrLz3BSKH9sbxYFvr527yYNTdozm84xAXP34ZANbqGsw+Zs7763AA9ifvq63/3dMLueSJKwiJDeHQtkwWT/uWv8y8xSWxN6ajxbmMvvjvjBh7K0u+e4v96evZtvF7ho76C5HRiWxYu4BNv37NeaNuJnXLEgaPuIGwiHhXh33WGqMFIITLBCS0I+W9L0l5fx5th/QitGdnACKH9nbMj2+HtbIak48X+HjhZjJhKavAw8tM6gdfUbBtN8pNUVlQTPWREryCA125O82SpaKarC2ZzP/H3Noyq8X6B0u0XP6BYYSExwIQGh5PydE8qqsriIxOBKBz12Es+e5/rgyxXiQBiFbFP7otF7zzBDnrtpP64ULC+zp+Ud1MjlNduSnczcdOe+Wm0DYbmUuTqS4u5YJ3/oWbhwc/3jwZm6XGJfvQ3Gm7xsvfizvn3eXqUBqdu/uxc8XNTVFZUeHCaBqejAUkWpXKgmLcvczEjB1Cp+supDj97G5i1pRX4hnkj5uHB/lbdlKRW9jIkTY/Zl8zlgrLcdOeVJdbTqrn6edFULs2pP6YAoDWmpxdOU0WpyuZzT54evqSfWgXAOlpa4iM7gKAyexFjaVlfadJWgCiVSnZn0XK9HkoN4Vyd6fP/X9m3TPvnnG59mMGs/Zfb7H09qcI6hKLX0zbxg+2mYkbFM8vM1cz/dq3GXb7+XQe2YV5D81l9/KdJ90EvvLFa1n83Desnr4Su9VO9/E9aNvFGMds1IV3HLsJHBDOyAtvB6Bzt+EkLfuoRd0EVlprV8dA516h+o3vLnV1GKIJTN99vqtDaPZ6RGS7OoRmK2dmrKtDaFbef33SRq31gLouL11AQghhUJIAhBDCoCQBCCGEQUkCEEIIg5IEIIQQBiUJQAghDEoSgBBCGJQkACGEMChJAEIIYVCSAIQQwqAkAQghhEFJAhBCCIOSBCCEEAYlCUAIIQxKEkAzl5tZxt/GLnJ1GEKIVkgSgBBCGJS8EayBffbfbSz7ah+BwZ6ERfnSsWcIfYdH8uaUX6mutBIZ68+D/x6Kf5Ane3cUnbI8fVshr/1zDQD9RkS6eI+EEK2VtAAa0K6tBfyy+CBv/3A5z84eS/o2x3tlX3kwiVsf68c7P11BXGIbPn192x+Wv/rwL/z9mUG8/ePlLtsXIUTrJwmgAaWuz2PIuPaYvdzx8TMxeGw01RVWykss9BrieF/q2Gs6kLIul/ISyynLy446ynsOjgBgzNUdXLY/QojWTbqARJP6oNcCV4fQIv3ryjq/9rVVMbPnxIKEdq4JpJWQFkAD6jYwnOSlWViqbFSW17BuaRaePh74BXqSkpwLwLIFe+k5OALfAPMpy/0CzfgGmElZ5yz/ap/L9kcI0bpJC6ABdekdypCx0dx10SKCQr2JS2yDr7+Jf7w67NjN3hh/HnxlKMBpyx96ZRiv/XMNSkG/86NcuUtCiFZMaa1dHQOde4XqN7671NVhNIjK8hq8fU1UVVp55Nofue/FIXTsGeLqsJqNIV75rg6hRZIuoNMweBfQ/z7520atdZ1PDmkBNLA3Jq8lI/0olmobY6/pIBd/IUSzJQmggT365ghXhyCEEGdFbgILIYRBSQIQQgiDkgQghBAGJQlACCEMqs4JQCnVXim1XCmVqpTaoZS631kerJT6WSmV7vzZpuHCFUII0VDq0wKwAv/QWncDhgB3K6W6AZOBpVrrTsBS57QQQohmps4JQGudrbXe5PxcCqQB7YAJwCxntVnAlfUNUgghRMNrkHsASqk4oC+QDERorbOds3KAiNMsc6dSaoNSasPRoqqGCEMIIcQ5qHcCUEr5AfOBB7TWJcfP045xJk451oTWerrWeoDWekBgsFd9wxBCCHGO6pUAlFImHBf/T7XWv43zm6uUinTOjwTy6heiEEKIxlCfp4AUMBNI01q/etysRcAk5+dJwMK6hyeEEKKx1GcsoGHAX4DtSqktzrIpwIvAF0qp24CDwHX1C1EIIURjqHMC0FonAeo0s8fUdb1CCCGahnwTWAghDEoSgBBCGJQkACGEMChJAEIIYVCSAIQQwqAkAQhDe/7F3axYWeDqMFq0r1Jmk1d2GIDZG9+gsqbCxRG5xntz7nd1COdM3gksDG3K5M6uDkE0Y7+NZqNU6/xbWRKAMISMjAr+dOMGhgxuw7r1xUS29eTT2f35xyM7uOjCMCZcHsmmzcVMfjyNigobnp5ufD1/ED7e7jz17C5+WVNEdbWd22+N4ZZJMa7enUax6dAa3N086B05iKT9P1FQnsuVPf5C1tH9pOZuITG8F+syVmLTNgK92jC64xWY3c2uDrvBlZQV8M3SN4kIjSOvKIMjR7O5+8/vArDn4EYOHtrOmKF/paSsgJ+SZlJjrSY+uvcJ69i04yf2HtyIzW4lvn0fBve+3BW7ckatM60JcQp791Vw+y2xrF19PoGBJhZ9m1M7z2Kxc+sdW3hxWleSVgznq3kD8fZy4+NPMwkM8GDZT0NZ9tN5zP4kk4MHW2cXR1RADNklGQDklR2mxm7BZrdxuCSDUJ9wNmQlMaH7n7m+9x2E+0ay9fCvLo648RSX5tGj80huunwqHh6ep6yzev0X9Og8khsvexJf78Da8ozDqRwtzePaiydz/aWPk1+UweHc9KYK/ZxIC0AYRmyMNz17BgDQu1cAmZmVtfPS95QTEeFJv75BAAT4mwBYvqKAHamlLPzGkSxKSq3s3VdObKxPE0ff+MJ8I8kvy8ZircbdzYMwn0jyy7PJLskkLrgzRyrymb/9IwDs2kZb/2jXBtyI/H2DaRuW8Id1svP3Mn7k/wHQJX4wazZ/BUBmdiqZ2anM/X4aADU11RSX5hEV0alxg64DSQDCMMyexxq87u6Kqir7GZfRGl56vhtjRoc1ZmjNgrubO/5eQaTlb6WtfzQhPuFkHT3A0aoiAjyDaB+UwIWdr3Z1mE3CdNxf/cePd2OzWU+od6qxcDTQr/t4enQe0SixNSTpAhIC6NTRl9zcajZtLgagtMyK1Wpn9AWhfPBRBjU1jmSxZ2855eXWP1pVixblH8OWQ2uJCoghKiCGHTkbCfVtS1v/dmSXZFJcWQRAjc1CcWWhi6NtGt5eARQdzUZrO/syt9SWR4Z1IP3ABgB2H1hXWx4T2Y20vWuw1DhedFVWcYSKqhKaI2kBCAGYzW588H4fHp2SSmWlHW9vN776chAT/9yejMxKRo79Ba0hNMTMJ7P6uTrcRhMZEMPGQ0m09Y/G5G7G3c2DqIAYvE2+jOl0BT/vXoBN2wAYHDOKIO8QF0fc+M7reyXfLf8f3l7+hAfHUGOtBuD8gdfxU9JMNqX+eMJN4JiobhwpyWb+jy8DjtbEuGG3QjN875VyPObkWp17heo3vrvU1WGIJjDEK9/VIbRI/7pygKtDaJ4S2rk6Apf63yd/26i1rvPJIV1AQghhUJIAhBDCoCQBCCGEQUkCEEIIg5IEIIQQBiUJQAghDEoSgBBCGJQkACGEMChJAEIIYVCSAIQQwqAkAQghhEFJAhBCCIOSBCCEEAYlCUAIIQxKEoAQQhiUJAAhhDAoSQBCCGFQkgCEEMKgJAEIIYRBSQIQQgiDkgQghBAG1SgJQCk1Xim1Sym1Ryk1uTG2IYQQon4aPAEopdyB/wEXA92AG5VS3Rp6O0IIIeqnMVoAg4A9Wut9WmsLMAeY0AjbEUIIUQ8ejbDOdkDmcdNZwODfV1JK3Qnc6ZysvjhmdkojxNIShQIFrg6imZBjUWuxHItjjh2LNa4NpBnoUp+FGyMBnBWt9XRgOoBSaoPWeoCrYmlO5FgcI8fiGDkWx8ixOEYptaE+yzdGF9AhoP1x09HOMiGEEM1IYySA9UAnpVS8UsoM3AAsaoTtCCGEqIcG7wLSWluVUvcAPwLuwAda6x1nWGx6Q8fRgsmxOEaOxTFyLI6RY3FMvY6F0lo3VCBCCCFaEPkmsBBCGJQkACGEMCiXJwCjDhuhlGqvlFqulEpVSu1QSt3vLA9WSv2slEp3/mzj6libilLKXSm1WSn1rXM6XimV7Dw35jofKmj1lFJBSql5SqmdSqk0pdR5Rj0vlFIPOn8/UpRSnyulvIx0XiilPlBK5SmlUo4rO+W5oBzecB6XbUqpfmdav0sTgMGHjbAC/9BadwOGAHc7930ysFRr3QlY6pw2ivuBtOOmXwJe01p3BI4At7kkqqb3X+AHrXUi0BvHMTHceaGUagfcBwzQWvfA8VDJDRjrvPgIGP+7stOdCxcDnZz/7gTeOdPKXd0CMOywEVrrbK31JufnUhy/5O1w7P8sZ7VZwJWuibBpKaWigUuBGc5pBYwG5jmrGOJYKKUCgRHATACttUVrXYxBzwscTyp6K6U8AB8gGwOdF1rrVUDR74pPdy5MAGZrh1+BIKVU5B+t39UJ4FTDRrRzUSwuo5SKA/oCyUCE1jrbOSsHiHBRWE3tdeARwO6cDgGKtdZW57RRzo14IB/40NkdNkMp5YsBzwut9SHgFSADx4X/KLARY54XxzvduXDO11NXJwDDU0r5AfOBB7TWJcfP045ndFv9c7pKqcuAPK31RlfH0gx4AP2Ad7TWfYFyftfdY6Dzog2Ov2rjgSjAl5O7QwytvueCqxOAoYeNUEqZcFz8P9VaL3AW5/7WbHP+zHNVfE1oGHCFUuoAjm7A0Tj6wYOcTX8wzrmRBWRprZOd0/NwJAQjnhdjgf1a63ytdQ2wAMe5YsTz4ninOxfO+Xrq6gRg2GEjnH3cM4E0rfWrx81aBExyfp4ELGzq2Jqa1voxrXW01joOxzmwTGt9M7AcuNZZzSjHIgfIVEr9NsrjGCAVA54XOLp+hiilfJy/L78dC8OdF79zunNhETDR+TTQEODocV1Fp6a1duk/4BJgN7AXeNzV8TThfg/H0XTbBmxx/rsER9/3UiAdWAIEuzrWJj4uo4BvnZ8TgHXAHuBLwNPV8TXRMegDbHCeG18DbYx6XgBPAzuBFOBjwNNI5wXwOY77HzU4Woe3ne5cABSOpyr3AttxPD31h+uXoSCEEMKgXN0FJIQQwkUkAQghhEFJAhBCCIOSBCCEEAYlCUAIIQxKEoAQQhiUJAAhhDCo/wdbshK2pBvtygAAAABJRU5ErkJggg==\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "squarify.plot(sizes=bad_top20['pct_total'], label=bad_top20['word'], alpha=.8)\n",
+    "plt.axis=('off')\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "1dCb1q8XphcP",
+    "toc-hr-collapsed": true
+   },
+   "source": [
+    "## Stretch Goals\n",
+    "\n",
+    "* Analyze another corpus of documents - such as Indeed.com job listings ;).\n",
+    "* Play with the Spacy API to\n",
+    " - Extract Named Entities\n",
+    " - Extracting 'noun chunks'\n",
+    " - Attempt Document Classification with just Spacy\n",
+    " - *Note:* This [course](https://course.spacy.io/) will be of interesting in helping you with these stretch goals. \n",
+    "* Try to build a plotly dash app with your text data \n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "colab": {
+   "collapsed_sections": [],
+   "name": "LS_DS_421_Text_Data_Assignment.ipynb",
+   "provenance": [],
+   "version": "0.3.2"
+  },
+  "kernelspec": {
+   "display_name": "U4-S1-NLP (Python3)",
+   "language": "python",
+   "name": "u4-s1-nlp"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.0"
+  },
+  "toc-autonumbering": false
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
