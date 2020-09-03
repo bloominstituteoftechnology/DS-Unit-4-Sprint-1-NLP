@@ -17,7 +17,15 @@ pandas = "*"
 scipy = "*"
 beautifulsoup4 = "*"
 pyLDAvis = "==2.1.2"
+<<<<<<< Updated upstream
 jupyterlab = "*"
 
 [requires]
 python_version = "3.7"
+=======
+jupyter = "*"
+jupyterlab = "*"
+
+[requires]
+python_version = "3.8"
+>>>>>>> Stashed changes
