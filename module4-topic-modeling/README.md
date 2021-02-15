@@ -57,3 +57,36 @@ coherence_lda = coherence_model_lda.get_coherence()
 coherence_lda
 ```
 The higher the score the better the model is. To select the optimum number of topics we can sweep the number of topics and train different LDA models and compare their coherence scores.
+
+### Libraries:
+```
+import numpy as np
+import pandas as pd
+
+import os
+import re
+from ast import literal_eval
+import warnings
+from pprint import pprint
+
+import gensim
+from gensim.utils import simple_preprocess
+from gensim.parsing.preprocessing import STOPWORDS
+from gensim import corpora
+from gensim.models import CoherenceModel
+from gensim import models
+from gensim.models.ldamulticore import LdaMulticore
+
+import pyLDAvis
+import pyLDAvis.gensim
+import tqdm
+import spacy
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_20newsgroups
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
+```
