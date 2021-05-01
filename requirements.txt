@@ -9,3 +9,4 @@ nltk
 pandas
 scipy
 beautifulsoup4
+pandarallel
