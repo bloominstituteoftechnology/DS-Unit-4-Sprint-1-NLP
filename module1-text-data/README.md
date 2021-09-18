@@ -12,26 +12,27 @@ tokenizer = Tokenizer(nlp.vocab)
 [token.text for token in nlp(sample_text)]
 ```
 To manage the memory usage we pipeline the text into batches: `tokenizer.pipe(df['reviews.text'], batch_size=500)`
-- **Filter out tokens by Spacy methods:** Spacy default stop words  is a python set, `nlp.Defaults.stop_words`. the *token* class (not *tokens* class) provides `token.is_stop`, `token.is_punct`, and `token.text` attributes to filter out default stop words, punctuations, and to apply string methods such as *.lower()* to the tokenized text. the default stop word set can be expanded by: 
+- **Filter out tokens by Spacy methods:** Spacy default stop words  is a python set, `nlp.Defaults.stop_words`. the *token* class (not *tokens* class) provides `token.is_stop`, `token.is_punct`, and `token.text` attributes to filter out default stop words, punctuations, and to apply string methods such as *.lower()* to the tokenized text. Set of stop words are in lower case. The default stop word set can be expanded by: 
 ```
 STOP_WORDS = nlp.Defaults.stop_words.union(['it', "it's", 'it.', 'the'])
 if token.text.lower() not in STOP_WORDS:
 ```
 We can also filter out pronounce with `token.pos_ != 'PRON'`
-- **Statistical trimming:** `df_wc['appears_in_pct'].describe()` can be used to find out tokens that only appear (count only once) in a few documents as well as tokens that appear in almost all the documents. Both types fail to provide insight. we can filter out similar to `wc = wc[wc['appears_in_pct'] >= 0.025]`
-- **Stemming:** Is fast and useful for search engines but limited use for human as it only chops off the ing or es at the end of the words. 
+- **Statistical trimming:** `df_wc['appears_in_pct'].describe()` can be used to find out tokens that only appear (count once for each document that contains the token) in a few documents as well as tokens that appear in almost all the documents. Both types fail to provide insights. we may filter them out by `wc = wc[wc['appears_in_pct'] >= 0.025]`
+- **Stemming:** Is fast and useful for search engines but limited use for human as it only trims off *ing*, *es*, *ed* at the end of the words. 
 ```
 from nltk.stem import PorterStemmer
 ps = PorterStemmer()
 ps.stem(list_of_words)
 ```
-- **Lemmatization:** Spacy Tokenizer() does not do any semantic change in the document, only tokenize it. However, PorterStemmer() or .lemma_ method lemmatize the tokens.
+- **Lemmatization:** Syntax is the grammatical structure of the text, whereas semantics is the meaning being conveyed. Spacy Tokenizer() does not do any semantic change in the document. It only tokenizes it. However, PorterStemmer() and .lemma_ spacy method lemmatize the tokens syntactically, and semantically respectively.
 ```
 doc = nlp(text)
-for token in doc: token.lemma_.lower()
+for token in doc: 
+  token.lemma_.lower()
 ```
 
-Notebook nlp_TextData-411a.ipynb uses similar techniques for yelp_coffeeshop_review_data.csv. To create a contrast we compare reviews with rating ==5 and those with rating==1 only.
+Notebook [nlp_TextData-411a.ipynb](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/nlp_TextData-411a.ipynb) uses similar techniques for [yelp_coffeeshop_review_data.csv](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/data/yelp_coffeeshop_review_data.csv). To create a contrast we compare reviews with rating ==5 and those with rating==1 only.
 
 ### Libraries:
 ```
