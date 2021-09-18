@@ -1,6 +1,6 @@
 ## NLP-TextData-u4s1m1:
 
-In nlp_TextData-411.ipynb we useDatafiniti_Amazon_Consumer_Reviews_of_Amazon_Products.zip dataset to tokenize and visualize ‘reviews.text’ column. 
+In [nlp_TextData-411.ipynb](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/nlp_TextData-411.ipynb) we useDatafiniti_Amazon_Consumer_Reviews_of_Amazon_Products.zip dataset to tokenize and visualize ‘reviews.text’ column. 
 - **Tokenize by regex and str methods:** We use regex and text methods to clean up the data and tokenize each row of document into an iterable list. In order to apply token frequency method we use Counter class from collections library. We count repetition of tokens in the entire corpus of documents (data frame) as well as appearance of the tokens in each document (row). We get the ‘'pct_total' of each token and after ranking, we derive its cumulative sum. seaborn.lineplot() can be used to plot the 'cul_pct_total' vs ‘word’ or ‘rank’. Furthermore we use `squarify.plot(sizes=wc_topi['pct_total'], label=wc_topi['word'], alpha=.8 )` to viualize the frequency of the top rank tokens.
 - **Tokenize by Spacy:** We can use spacy to get an iterable tokens class object.
 ```
