@@ -12,7 +12,7 @@ tokenizer = Tokenizer(nlp.vocab)
 [token.text for token in nlp(sample_text)]
 ```
 To manage the memory usage we pipeline the text into batches: `tokenizer.pipe(df['reviews.text'], batch_size=500)`
-- **Filter out tokens by Spacy methods:** Spacy default stop words  is a python set nlp.Defaults.stop_words. the token class (not tokens class) provide token.is_stop, token.is_punct, token.text attributes to filter out default stop words, punctuations, apply string methods such as .lower() to the tokenized text. the default stop word set can be expanded by: 
+- **Filter out tokens by Spacy methods:** Spacy default stop words  is a python set, `nlp.Defaults.stop_words`. the *token* class (not *tokens* class) provides `token.is_stop`, `token.is_punct`, and `token.text` attributes to filter out default stop words, punctuations, and to apply string methods such as *.lower()* to the tokenized text. the default stop word set can be expanded by: 
 ```
 STOP_WORDS = nlp.Defaults.stop_words.union(['it', "it's", 'it.', 'the'])
 if token.text.lower() not in STOP_WORDS:
