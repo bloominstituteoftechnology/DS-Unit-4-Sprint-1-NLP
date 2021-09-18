@@ -32,7 +32,7 @@ for token in doc:
   token.lemma_.lower()
 ```
 
-Notebook [nlp_TextData-411a.ipynb](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/nlp_TextData-411a.ipynb) uses similar techniques for [yelp_coffeeshop_review_data.csv](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/data/yelp_coffeeshop_review_data.csv). To create a contrast we compare reviews with rating ==5 and those with rating==1 only.
+Notebook [nlp_TextData-411a.ipynb](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/nlp_TextData-411a.ipynb) uses similar techniques for [yelp_coffeeshop_review_data.csv](https://github.com/skhabiri/ML-NLP/blob/main/module1-text-data/data/yelp_coffeeshop_review_data.csv). To create a contrast we compare reviews of rating ==5 and those with rating==1 only.
 
 ### Libraries:
 ```
