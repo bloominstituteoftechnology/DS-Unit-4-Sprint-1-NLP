@@ -41,7 +41,7 @@ By default it uses sklearn tokenizer. However we can use a customized tokenizer 
 
 ### Query documents by similarity: 
 We will apply n-dimensional distance of two document vectors to measure similarity, and query for input and output.
-* **Cosine similarity:**  It is the dot product of the two vectors divided by the product of the two vectors' lengths. Or multiplication of their magnitude along a common axis. Same vectors (duplicate documents have a cosine of 1.
+* **Cosine similarity:**  It is the dot product of the two vectors divided by the product of the two vectors' lengths. Dot product is multiplication of vectors magnitudes along a common axis. Hence, same vectors (duplicate documents) have a cosine of 1.
 
 
 > from sklearn.metrics.pairwise import cosine_similarity
