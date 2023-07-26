@@ -1,6 +1,6 @@
-gensim==3.8.1
-pyLDAvis==2.1.2
-scikit-learn==1.1.2
+gensim
+pyLDAvis
+scikit-learn
 seaborn
 spacy
 squarify
@@ -10,3 +10,6 @@ pandas
 scipy
 beautifulsoup4
 pandarallel
+jupyter
+numpy
+matplotlib
